@@ -9,8 +9,6 @@ const (
 	WorkerPoolBrowser WorkerPool = "browser"
 )
 
-// StreamName returns the Redis Stream name for the given pool/priority.
-// Streams are partitioned by pool to avoid duplicate delivery across consumer groups.
 func StreamName(pool WorkerPool, priority Priority) (string, error) {
 	switch pool {
 	case WorkerPoolAPI, WorkerPoolBrowser:
@@ -29,7 +27,6 @@ func StreamName(pool WorkerPool, priority Priority) (string, error) {
 
 const DLQStream = "synthetic:jobs:dlq"
 
-// Delayed ZSET used for backoff/scheduled visibility.
 const DelayedZSet = "synthetic:jobs:delayed"
 
 const StreamFieldPayload = "payload"

@@ -25,11 +25,10 @@ type ScriptRef struct {
 }
 
 type Limits struct {
-	TimeoutSeconds    int `json:"timeout_seconds,omitempty"`
-	MaxVUs            int `json:"max_vus,omitempty"`
+	TimeoutSeconds     int `json:"timeout_seconds,omitempty"`
+	MaxVUs             int `json:"max_vus,omitempty"`
 	MaxDurationSeconds int `json:"max_duration_seconds,omitempty"`
 
-	// Resource hints for sandboxed execution modes.
 	MemoryMB      int `json:"memory_mb,omitempty"`
 	CPUMillicores int `json:"cpu_millicores,omitempty"`
 
@@ -45,12 +44,11 @@ type ExecutionJobV1 struct {
 
 	TenantID string `json:"tenant_id"`
 
-	// W3C trace context (optional). Propagate across job boundaries.
 	TraceParent string `json:"traceparent,omitempty"`
 
 	IdempotencyKey string `json:"idempotency_key"`
 
-	TriggerType string     `json:"trigger_type"` // manual|scheduled|api|ci-cd|immediate
+	TriggerType  string     `json:"trigger_type"`
 	ScheduledFor *time.Time `json:"scheduled_for,omitempty"`
 
 	Priority Priority `json:"priority"`
@@ -60,21 +58,21 @@ type ExecutionJobV1 struct {
 
 	NextVisibleAt *time.Time `json:"next_visible_at,omitempty"`
 
-	ScriptRef   ScriptRef   `json:"script_ref"`
-	ScenarioID  *uuid.UUID  `json:"scenario_id,omitempty"`
-	Config      ExecutionConfigV1 `json:"config"`
-	Limits      Limits      `json:"limits,omitempty"`
-	CreatedAt   time.Time   `json:"created_at"`
+	ScriptRef  ScriptRef         `json:"script_ref"`
+	ScenarioID *uuid.UUID        `json:"scenario_id,omitempty"`
+	Config     ExecutionConfigV1 `json:"config"`
+	Limits     Limits            `json:"limits,omitempty"`
+	CreatedAt  time.Time         `json:"created_at"`
 }
 
 type ExecutionConfigV1 struct {
-	UserID      string `json:"user_id,omitempty"`
-	Region      string `json:"region,omitempty"`
-	Environment EnvironmentConfig `json:"environment"`
-	Variables   map[string]interface{} `json:"variables,omitempty"`
-	LoadConfig  LoadConfig `json:"load_config"`
-	OverrideVars map[string]string `json:"override_vars,omitempty"`
-	DryRun      bool `json:"dry_run,omitempty"`
+	UserID       string                 `json:"user_id,omitempty"`
+	Region       string                 `json:"region,omitempty"`
+	Environment  EnvironmentConfig      `json:"environment"`
+	Variables    map[string]interface{} `json:"variables,omitempty"`
+	LoadConfig   LoadConfig             `json:"load_config"`
+	OverrideVars map[string]string      `json:"override_vars,omitempty"`
+	DryRun       bool                   `json:"dry_run,omitempty"`
 
 	ScriptType     string `json:"script_type,omitempty"`
 	BrowserEnabled bool   `json:"browser_enabled,omitempty"`
@@ -97,7 +95,7 @@ type EnvironmentConfig struct {
 	BaseURL    string            `json:"base_url"`
 	Headers    map[string]string `json:"headers,omitempty"`
 	AuthConfig AuthConfig        `json:"auth_config,omitempty"`
-	Timeout    int               `json:"timeout,omitempty"` // seconds
+	Timeout    int               `json:"timeout,omitempty"`
 }
 
 type AuthConfig struct {
@@ -134,10 +132,6 @@ func (j *ExecutionJobV1) ValidateBasic() error {
 	return nil
 }
 
-// ComputeIdempotencyKey returns a stable key for end-to-end deduplication.
-//
-// Default formula (per plan): sha256(tenant_id + script_ref + scheduled_for + trigger_type).
-// Use scheduledForUTC with a stable format (RFC3339Nano) to avoid timezone drift.
 func ComputeIdempotencyKey(tenantID string, scriptRef ScriptRef, scheduledForUTC time.Time, triggerType string) string {
 	h := sha256.New()
 	_, _ = h.Write([]byte(tenantID))
@@ -152,10 +146,7 @@ func ComputeIdempotencyKey(tenantID string, scriptRef ScriptRef, scheduledForUTC
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// DeterministicExecutionID derives a UUID from an idempotency key.
-// This makes retries/duplicates converge on the same execution_id.
 func DeterministicExecutionID(idempotencyKey string) uuid.UUID {
-	// NewSHA1 is a SHA1-based UUID (v5 semantics).
+
 	return uuid.NewSHA1(uuid.NameSpaceOID, []byte(idempotencyKey))
 }
-
