@@ -1,5 +1,5 @@
 module github.com/elven-monitoring/synthetic-contracts
 
-go 1.25.4
+go 1.26.1
 
 require github.com/google/uuid v1.6.0
